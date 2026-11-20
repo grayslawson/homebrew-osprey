@@ -24,11 +24,16 @@ jobs:
         id: release
         run: |
           set -euo pipefail
-          tag="$(curl -fsSL https://api.github.com/repos/grayslawson/osprey/releases/latest \
-            | python3 -c 'import json,sys; print(json.load(sys.stdin)["tag_name"])')"
+          tag="$(curl -fsSL 'https://api.github.com/repos/grayslawson/osprey/releases?per_page=20' \
+            | python3 -c 'import json,sys; rs=[r for r in json.load(sys.stdin) if not r["draft"] and not r["prerelease"]]; print(rs[0]["tag_name"] if rs else "")')"
+          if [ -z "$tag" ]; then
+            echo 'No final release yet; the tap stays where it is.' >&2
+            exit 0
+          fi
           version="${tag#v}"
           echo "version=$version" >> "$GITHUB_OUTPUT"
       - name: Point the formula at the release
+        if: steps.release.outputs.version != ''
         run: upstream/scripts/sync-homebrew-tap.sh upstream . "${{ steps.release.outputs.version }}"
       - name: Commit the formula
         run: |
