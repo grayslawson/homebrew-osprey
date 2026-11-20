@@ -1,0 +1,15 @@
+class Osprey < Formula
+  desc "Ubiquiti PTZ controller for an existing Frigate installation"
+  homepage "https://github.com/grayslawson/osprey"
+  version "0.9.0b1"
+  url "https://github.com/grayslawson/osprey/archive/refs/tags/v0.9.0b1.tar.gz"
+  sha256 "84ee4b4713e6604fe92d9ea5e189f764d1cc668e2a484e346d37b383ccf146a2"
+  license "MIT"
+  def install
+    bin.install "scripts/osprey"
+    bin.install "scripts/osprey-doctor.sh"
+  end
+  test do
+    assert_match "Usage: osprey", shell_output("#{bin}/osprey --help")
+  end
+end

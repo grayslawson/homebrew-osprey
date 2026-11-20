@@ -1,0 +1,44 @@
+name: Sync the formula
+
+# The tap points at a published release.  A pre-release is never picked up:
+# `releases/latest` skips them, so the tap only moves on a final release.
+on:
+  schedule:
+    - cron: "41 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: grayslawson/osprey
+          path: upstream
+          ref: main
+      - name: Find the latest release
+        id: release
+        run: |
+          set -euo pipefail
+          tag="$(curl -fsSL https://api.github.com/repos/grayslawson/osprey/releases/latest \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["tag_name"])')"
+          version="${tag#v}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Point the formula at the release
+        run: upstream/scripts/sync-homebrew-tap.sh upstream . "${{ steps.release.outputs.version }}"
+      - name: Commit the formula
+        run: |
+          set -euo pipefail
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'The formula is already up to date.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "chore: point the formula at ${{ steps.release.outputs.version }}"
+          git push
