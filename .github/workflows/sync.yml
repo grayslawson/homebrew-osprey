@@ -6,6 +6,11 @@ on:
   schedule:
     - cron: "41 5 * * *"
   workflow_dispatch:
+    inputs:
+      version:
+        description: Release version to point the formula at (defaults to the latest final release)
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -15,6 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      # The upstream checkout is ignored by the tap's .gitignore, so it
+      # cannot end up in the tap itself.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           repository: grayslawson/osprey
@@ -22,8 +29,14 @@ jobs:
           ref: main
       - name: Find the latest release
         id: release
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
+          if [ -n "${INPUT_VERSION:-}" ]; then
+            echo "version=${INPUT_VERSION#v}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           tag="$(curl -fsSL 'https://api.github.com/repos/grayslawson/osprey/releases?per_page=20' \
             | python3 -c 'import json,sys; rs=[r for r in json.load(sys.stdin) if not r["draft"] and not r["prerelease"]]; print(rs[0]["tag_name"] if rs else "")')"
           if [ -z "$tag" ]; then
