@@ -1,9 +1,9 @@
 class Osprey < Formula
   desc "Diagnostics launcher for the Osprey UniFi PTZ controller"
   homepage "https://github.com/grayslawson/osprey"
-  version "0.9.0b2"
-  url "https://github.com/grayslawson/osprey/archive/refs/tags/v0.9.0b2.tar.gz"
-  sha256 "cc6f11019243b2c75ac30e9f1cc0412a7fdf81dba9e479edbfd3caaaa40cb5a4"
+  version "0.9.0b3"
+  url "https://github.com/grayslawson/osprey/archive/refs/tags/v0.9.0b3.tar.gz"
+  sha256 "d9b31b1c3d2f39a0eae000eaf6a1ed3a18954c2b99e08a3c480866e5fc2c38ef"
   license "MIT"
   def install
     bin.install "scripts/osprey"
